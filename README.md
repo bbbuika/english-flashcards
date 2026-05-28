@@ -16,7 +16,34 @@ npm run dev
 ```
 
 Open <http://localhost:3000>, create a room, share the 5-character code with up
-to 3 other players on their own devices (same network or behind a tunnel).
+to 3 other players on their own devices.
+
+## Play with friends over the internet
+
+The dev server only listens on your laptop, so to let friends join from their
+own devices you need to expose it publicly. A tunnel is the simplest way — no
+account or deploy needed:
+
+```bash
+# in one terminal
+npm run dev
+
+# in another terminal, pick one of:
+npx cloudflared tunnel --url http://localhost:3000     # cloudflared
+# or
+ngrok http 3000                                        # ngrok
+```
+
+Both print a public `https://…` URL. Share it with friends; they open it on
+their phone or laptop, hit *Odaya Katıl*, and enter the 5-character room code
+you created. While the tunnel is up the connection is live; closing the
+terminal (or restarting `npm run dev`) drops everyone and wipes the room.
+
+For a more stable setup (rooms survive deploys, no laptop required), deploy
+to a long-running Node host like Railway / Render / Fly.io. The current
+in-memory + SSE architecture does *not* work on serverless platforms like
+Vercel — those would need rooms moved to a persistent store and realtime
+moved to a managed pub/sub service.
 
 ## Game flow
 
@@ -24,11 +51,12 @@ to 3 other players on their own devices (same network or behind a tunnel).
   (Difficulty: *Kolay* / *Zor*), optionally designates a Skor Tutucu. Up to 4
   players.
 - **Playing** — 7-card hands, 3 of each token (*Olay Öyle Olmadı* / *Olay Böyle
-  Oldu*), a face-up theme rune. Step hints suggest which card category fits the
-  current beat; you can still play anything.
-- **Ending** — playing a rune card (or running through the full 7-step
-  sequence) ends the game. Winner is determined by *Niyet*:
-  *Strateji* — lowest score wins; *Uzlaşma* — highest wins.
+  Oldu*), a face-up theme rune, and a board with six labelled slots
+  (Mekan, Zaman, Kahraman, Şövalye, Olay, Olgu). On your turn you select a
+  card from your hand and click a slot to place it. Slots stack across turns.
+- **Ending** — playing an ending rune card in any slot ends the game. Winner
+  is determined by *Niyet*: *Strateji* — lowest score wins;
+  *Uzlaşma* — highest wins.
 
 ## Project layout
 
