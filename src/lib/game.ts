@@ -1,7 +1,17 @@
 import { CARDS, getCard, isEndingRune } from './cards';
 import { createRoom, generateRoomCode, getRoom, updateRoom } from './rooms';
-import type { GameState, Niyet, Zorluk } from './types';
-import { STORY_SEQUENCE } from './types';
+import type { GameState, Niyet, SlotKey, Zorluk } from './types';
+
+function emptyBoard(): Record<SlotKey, string[]> {
+  return {
+    mekan: [],
+    zaman: [],
+    kahraman: [],
+    sovalye: [],
+    olay: [],
+    olgu: [],
+  };
+}
 
 const STRATEGY_START_POINTS: Record<Zorluk, Record<number, number>> = {
   zor: { 2: 128, 3: 81, 4: 69 },
@@ -60,9 +70,9 @@ export function createNewRoom(hostName: string, hostId: string): GameState {
     mainDeck: [],
     runeDeck: [],
     discardPile: [],
+    board: emptyBoard(),
     storySequence: [],
     currentTurnPlayerId: hostId,
-    currentStep: null,
     log: [
       {
         ts: now,
@@ -179,7 +189,8 @@ export function startGame(code: string, playerId: string): GameState | { error: 
     // First turn: random
     const first = s.players[Math.floor(Math.random() * s.players.length)];
     s.currentTurnPlayerId = first.id;
-    s.currentStep = STORY_SEQUENCE[0];
+    s.board = emptyBoard();
+    s.storySequence = [];
     s.phase = 'playing';
     s.log.push({
       ts: Date.now(),
@@ -219,6 +230,7 @@ export function playCard(
   code: string,
   playerId: string,
   cardId: string,
+  slot: SlotKey,
 ): GameState | { error: string } | undefined {
   const room = getRoom(code);
   if (!room) return undefined;
@@ -231,8 +243,8 @@ export function playCard(
   if (idx === -1) return { error: 'no_card' };
   const card = getCard(cardId);
   if (!card) return { error: 'unknown_card' };
-  const step = s.currentStep;
-  if (!step) return { error: 'no_step' };
+  const validSlots: SlotKey[] = ['mekan', 'zaman', 'kahraman', 'sovalye', 'olay', 'olgu'];
+  if (!validSlots.includes(slot)) return { error: 'bad_slot' };
 
   return updateRoom(code, (st) => {
     const p = st.players.find((x) => x.id === playerId);
@@ -241,11 +253,11 @@ export function playCard(
     if (i === -1) return;
     p.hand.splice(i, 1);
     p.handCount = p.hand.length;
-    st.discardPile.push(cardId);
+    st.board[slot].push(cardId);
     st.storySequence.push({
       cardId,
       playedBy: playerId,
-      step: step,
+      slot,
       ts: Date.now(),
     });
 
@@ -257,7 +269,7 @@ export function playCard(
       p.score += value;
     }
 
-    if (step === 'ending' || isEndingRune(card)) {
+    if (isEndingRune(card)) {
       st.phase = 'ended';
       st.winnerId = computeWinner(st);
       st.log.push({
@@ -270,9 +282,6 @@ export function playCard(
       return;
     }
 
-    const nextStepIdx = STORY_SEQUENCE.indexOf(step) + 1;
-    st.currentStep = STORY_SEQUENCE[nextStepIdx] ?? null;
-
     const turnIdx = st.players.findIndex((x) => x.id === playerId);
     const nextPlayer = st.players[(turnIdx + 1) % st.players.length];
     st.currentTurnPlayerId = nextPlayer.id;
@@ -280,8 +289,8 @@ export function playCard(
     st.log.push({
       ts: Date.now(),
       message: {
-        tr: `${p.name} ${card.title} oynadı.`,
-        en: `${p.name} played ${card.title}.`,
+        tr: `${p.name} ${card.title} → ${slot}.`,
+        en: `${p.name} played ${card.title} → ${slot}.`,
       },
     });
   });
@@ -385,9 +394,9 @@ export function newGameInSameRoom(code: string, playerId: string): GameState | u
     s.mainDeck = [];
     s.runeDeck = [];
     s.discardPile = [];
+    s.board = emptyBoard();
     s.storySequence = [];
     s.currentTurnPlayerId = s.hostId;
-    s.currentStep = null;
     s.winnerId = null;
     for (const p of s.players) {
       p.hand = [];

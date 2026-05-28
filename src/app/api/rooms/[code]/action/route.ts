@@ -14,7 +14,7 @@ import {
   spendDidntHappen,
 } from '@/lib/game';
 import { getRoomState, redactForPlayer } from '@/lib/rooms';
-import type { Niyet, Zorluk } from '@/lib/types';
+import type { Niyet, SlotKey, Zorluk } from '@/lib/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,7 +26,7 @@ type Action =
   | { type: 'set_scorekeeper'; playerId: string; targetId: string }
   | { type: 'start_game'; playerId: string }
   | { type: 'draw_card'; playerId: string; pile?: 'main' | 'rune' }
-  | { type: 'play_card'; playerId: string; cardId: string }
+  | { type: 'play_card'; playerId: string; cardId: string; slot: SlotKey }
   | { type: 'pass_turn'; playerId: string }
   | { type: 'didnt_happen'; playerId: string; targetId: string }
   | { type: 'did_happen'; playerId: string; targetId: string }
@@ -64,7 +64,7 @@ export async function POST(
       result = drawCard(code, action.playerId, action.pile ?? 'main');
       break;
     case 'play_card':
-      result = playCard(code, action.playerId, action.cardId);
+      result = playCard(code, action.playerId, action.cardId, action.slot);
       break;
     case 'pass_turn':
       result = passTurn(code, action.playerId);

@@ -22,6 +22,7 @@ export function EndScreen({
   const sorted = [...state.players].sort((a, b) =>
     state.niyet === 'strateji' ? a.score - b.score : b.score - a.score,
   );
+  void lang;
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 animate-fade-in">
@@ -42,7 +43,7 @@ export function EndScreen({
                 return (
                   <div key={i} className="flex flex-col items-center gap-1 shrink-0">
                     <div className="text-[10px] text-amber-200/50 uppercase">
-                      {strings.steps[p.step as keyof typeof strings.steps]?.[lang]}
+                      {strings.slots[p.slot as keyof typeof strings.slots]?.[lang]}
                     </div>
                     <CardImage card={c} size="sm" />
                   </div>

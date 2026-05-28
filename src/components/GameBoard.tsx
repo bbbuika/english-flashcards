@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useLang } from './LanguageContext';
 import { CardImage, CardBack } from './Card';
-import type { PublicGameState } from '@/lib/types';
-import { getCard, cardMatchesStep } from '@/lib/cards';
+import type { PublicGameState, SlotKey } from '@/lib/types';
+import { SLOT_KEYS } from '@/lib/types';
+import { getCard } from '@/lib/cards';
 
 type Props = {
   state: PublicGameState;
@@ -13,17 +14,17 @@ type Props = {
 };
 
 export function GameBoard({ state, myId, sendAction }: Props) {
-  const { t, lang, strings } = useLang();
+  const { t, lang } = useLang();
   const me = state.players.find((p) => p.id === myId);
   const isMyTurn = state.currentTurnPlayerId === myId;
   const themeRune = state.themeRuneId ? getCard(state.themeRuneId) : null;
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [tokenMode, setTokenMode] = useState<null | 'didnt' | 'did'>(null);
 
-  const playSelected = () => {
-    if (!selected) return;
-    sendAction({ type: 'play_card', playerId: myId, cardId: selected });
-    setSelected(null);
+  const placeIn = (slot: SlotKey) => {
+    if (!selectedCard) return;
+    sendAction({ type: 'play_card', playerId: myId, cardId: selectedCard, slot });
+    setSelectedCard(null);
   };
 
   const onUseToken = (targetId: string) => {
@@ -36,7 +37,6 @@ export function GameBoard({ state, myId, sendAction }: Props) {
     setTokenMode(null);
   };
 
-  const currentStep = state.currentStep;
   const currentPlayer = state.players.find((p) => p.id === state.currentTurnPlayerId);
 
   return (
@@ -49,12 +49,15 @@ export function GameBoard({ state, myId, sendAction }: Props) {
           <span className="text-amber-200/60">·</span>
           <span className="text-amber-200/80">{t(state.zorluk)}</span>
         </div>
-        <div className="flex items-center gap-2">
-          {currentStep && (
-            <div className="text-xs text-amber-200/80 hidden sm:block">
-              <span className="text-amber-200/50">{t('step')}:</span>{' '}
-              <span className="text-amber-100 font-medium">{strings.steps[currentStep as keyof typeof strings.steps]?.[lang]}</span>
-            </div>
+        <div className="flex items-center gap-2 text-xs">
+          {currentPlayer && (
+            <span className="text-amber-200/60">
+              {t('currentTurn')}:{' '}
+              <span className="text-amber-100">{currentPlayer.name}</span>
+            </span>
+          )}
+          {isMyTurn && (
+            <span className="text-emerald-300 font-semibold animate-pulse">{t('yourTurn')}</span>
           )}
         </div>
       </header>
@@ -69,88 +72,43 @@ export function GameBoard({ state, myId, sendAction }: Props) {
           />
         </section>
 
-        <section className="overflow-y-auto px-3 py-3 scrollbar-thin">
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg text-amber-100">{t('story')}</h3>
-              <div className="flex items-center gap-2 text-xs text-amber-200/60">
-                {currentPlayer && (
-                  <span>
-                    {t('currentTurn')}: <span className="text-amber-100">{currentPlayer.name}</span>
-                  </span>
-                )}
-                {isMyTurn && (
-                  <span className="text-emerald-300 font-semibold animate-pulse">
-                    {t('yourTurn')}
-                  </span>
-                )}
-              </div>
-            </div>
+        <section className="overflow-y-auto px-3 py-4 scrollbar-thin">
+          <div className="max-w-5xl mx-auto space-y-4">
+            <Board
+              state={state}
+              isMyTurn={isMyTurn}
+              selectedCard={selectedCard}
+              onSlotClick={placeIn}
+              themeRune={themeRune}
+            />
 
-            {currentStep && isMyTurn && (
-              <div className="text-sm text-amber-200/80 bg-amber-900/15 border border-amber-900/30 rounded-lg p-3">
-                <span className="font-medium">{strings.steps[currentStep as keyof typeof strings.steps]?.[lang]}:</span>{' '}
-                {strings.stepHints[currentStep as keyof typeof strings.stepHints]?.[lang]}
-              </div>
+            {isMyTurn && (
+              <p className="text-center text-amber-200/70 text-sm italic">
+                {selectedCard ? t('pickSlot') : t('pickCard')}
+              </p>
             )}
 
-            {state.storySequence.length === 0 ? (
-              <p className="text-amber-200/40 italic text-center py-8">{t('storyEmpty')}</p>
-            ) : (
-              <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-thin">
-                {state.storySequence.map((played, i) => {
-                  const card = getCard(played.cardId);
-                  const player = state.players.find((p) => p.id === played.playedBy);
-                  return (
-                    <div key={i} className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="text-[10px] uppercase tracking-wide text-amber-200/50">
-                        {strings.steps[played.step as keyof typeof strings.steps]?.[lang]}
-                      </div>
-                      <CardImage card={card} size="md" />
-                      {player && (
-                        <div className="text-[10px] text-amber-200/60 truncate max-w-[100px]">
-                          {player.name}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-4 items-start pt-2">
-              <div className="flex flex-col items-center gap-1">
-                <div className="text-xs text-amber-200/60">{t('themeRune')}</div>
-                {themeRune ? <CardImage card={themeRune} size="md" /> : <CardBack size="md" />}
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="text-xs text-amber-200/60">{t('mainDeck')}</div>
-                <div className="relative">
-                  <CardBack size="md" kind="main" />
-                  <div className="absolute inset-x-0 bottom-1 text-center text-[10px] text-amber-200 bg-stone-950/80 mx-1 py-0.5 rounded">
-                    {state.mainDeckCount}
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="text-xs text-amber-200/60">{t('runeDeck')}</div>
-                <div className="relative">
-                  <CardBack size="md" kind="rune" />
-                  <div className="absolute inset-x-0 bottom-1 text-center text-[10px] text-amber-200 bg-stone-950/80 mx-1 py-0.5 rounded">
-                    {state.runeDeckCount}
-                  </div>
-                </div>
-              </div>
-              {state.discardPile.length > 0 && (
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-xs text-amber-200/60">{t('discardPile')}</div>
-                  <CardImage
-                    card={getCard(state.discardPile[state.discardPile.length - 1])}
-                    size="md"
-                  />
-                  <div className="text-[10px] text-amber-200/60">{state.discardPile.length}</div>
-                </div>
-              )}
+            <div className="flex flex-wrap gap-3 items-start justify-center pt-2">
+              <PileView
+                label={t('mainDeck')}
+                count={state.mainDeckCount}
+                kind="main"
+                onDraw={
+                  isMyTurn && state.mainDeckCount > 0
+                    ? () => sendAction({ type: 'draw_card', playerId: myId, pile: 'main' })
+                    : undefined
+                }
+              />
+              <PileView
+                label={t('runeDeck')}
+                count={state.runeDeckCount}
+                kind="rune"
+                onDraw={
+                  isMyTurn && state.runeDeckCount > 0
+                    ? () => sendAction({ type: 'draw_card', playerId: myId, pile: 'rune' })
+                    : undefined
+                }
+              />
             </div>
 
             <details className="mt-4">
@@ -175,39 +133,12 @@ export function GameBoard({ state, myId, sendAction }: Props) {
               </h3>
               <div className="flex items-center gap-2">
                 {isMyTurn && (
-                  <>
-                    <button
-                      className="btn-ghost text-xs"
-                      onClick={() =>
-                        sendAction({ type: 'draw_card', playerId: myId, pile: 'main' })
-                      }
-                      disabled={state.mainDeckCount === 0}
-                    >
-                      {t('drawMain')}
-                    </button>
-                    <button
-                      className="btn-ghost text-xs"
-                      onClick={() =>
-                        sendAction({ type: 'draw_card', playerId: myId, pile: 'rune' })
-                      }
-                      disabled={state.runeDeckCount === 0}
-                    >
-                      {t('drawRune')}
-                    </button>
-                    <button
-                      className="btn-ghost text-xs"
-                      onClick={() => sendAction({ type: 'pass_turn', playerId: myId })}
-                    >
-                      {t('passTurn')}
-                    </button>
-                    <button
-                      className="btn-primary text-xs"
-                      onClick={playSelected}
-                      disabled={!selected}
-                    >
-                      {t('playCard')}
-                    </button>
-                  </>
+                  <button
+                    className="btn-ghost text-xs"
+                    onClick={() => sendAction({ type: 'pass_turn', playerId: myId })}
+                  >
+                    {t('passTurn')}
+                  </button>
                 )}
                 <TokenBar me={me} tokenMode={tokenMode} setTokenMode={setTokenMode} />
               </div>
@@ -216,15 +147,14 @@ export function GameBoard({ state, myId, sendAction }: Props) {
               {state.you?.hand.map((cardId) => {
                 const card = getCard(cardId);
                 if (!card) return null;
-                const valid = currentStep ? cardMatchesStep(card, currentStep) : true;
                 return (
                   <CardImage
                     key={cardId}
                     card={card}
                     size="lg"
-                    selected={selected === cardId}
-                    onClick={() => setSelected(selected === cardId ? null : cardId)}
-                    dimmed={isMyTurn && !valid}
+                    selected={selectedCard === cardId}
+                    onClick={() => setSelectedCard(selectedCard === cardId ? null : cardId)}
+                    disabled={!isMyTurn}
                   />
                 );
               })}
@@ -237,6 +167,111 @@ export function GameBoard({ state, myId, sendAction }: Props) {
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+function Board({
+  state,
+  isMyTurn,
+  selectedCard,
+  onSlotClick,
+  themeRune,
+}: {
+  state: PublicGameState;
+  isMyTurn: boolean;
+  selectedCard: string | null;
+  onSlotClick: (slot: SlotKey) => void;
+  themeRune: ReturnType<typeof getCard> | null;
+}) {
+  const { t, strings, lang } = useLang();
+  return (
+    <div className="card-frame p-4 md:p-6 bg-gradient-to-br from-stone-900/80 to-stone-950/80">
+      <div className="flex items-center gap-3 mb-4">
+        {themeRune ? (
+          <CardImage card={themeRune} size="sm" />
+        ) : (
+          <CardBack size="sm" kind="rune" />
+        )}
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-amber-200/50">
+            {t('themeRune')}
+          </div>
+          <div className="font-display text-amber-100 text-sm">
+            {themeRune?.title ?? '—'}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {SLOT_KEYS.map((slot) => {
+          const cards = state.board[slot] ?? [];
+          const topId = cards[cards.length - 1];
+          const topCard = topId ? getCard(topId) : null;
+          const canDrop = isMyTurn && !!selectedCard;
+          const slotLabel = strings.slots[slot as keyof typeof strings.slots]?.[lang] ?? slot;
+          return (
+            <button
+              key={slot}
+              type="button"
+              disabled={!canDrop}
+              onClick={() => onSlotClick(slot)}
+              className={`relative flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition ${
+                canDrop
+                  ? 'border-amber-300/60 hover:border-amber-200 hover:bg-amber-100/5 cursor-pointer'
+                  : 'border-amber-900/40 cursor-default'
+              }`}
+            >
+              <div className="text-xs uppercase tracking-wider text-amber-200/70">
+                {slotLabel}
+              </div>
+              {topCard ? (
+                <div className="relative">
+                  <CardImage card={topCard} size="md" />
+                  {cards.length > 1 && (
+                    <span className="absolute -top-1 -right-1 bg-amber-700 text-amber-50 text-[10px] font-mono rounded-full w-5 h-5 flex items-center justify-center border border-amber-900">
+                      {cards.length}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="w-[100px] h-[150px] rounded-lg border border-dashed border-amber-900/40 flex items-center justify-center text-amber-900/60 text-3xl">
+                  ◇
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PileView({
+  label,
+  count,
+  kind,
+  onDraw,
+}: {
+  label: string;
+  count: number;
+  kind: 'main' | 'rune';
+  onDraw?: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="text-xs text-amber-200/60">{label}</div>
+      <div className="relative">
+        <CardBack size="md" kind={kind} />
+        <div className="absolute inset-x-0 bottom-1 text-center text-[10px] text-amber-200 bg-stone-950/80 mx-1 py-0.5 rounded">
+          {count}
+        </div>
+      </div>
+      {onDraw && (
+        <button className="btn-ghost text-xs mt-1" onClick={onDraw}>
+          {kind === 'rune' ? '↑ Rün' : '↑ Çek'}
+        </button>
+      )}
     </div>
   );
 }

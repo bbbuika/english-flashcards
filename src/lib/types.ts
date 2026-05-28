@@ -20,24 +20,9 @@ export type Card = {
 export type Niyet = 'strateji' | 'uzlasma';
 export type Zorluk = 'kolay' | 'zor';
 
-export type StoryStep =
-  | 'time'
-  | 'place'
-  | 'creator'
-  | 'event1'
-  | 'event2'
-  | 'hero'
-  | 'ending';
+export type SlotKey = 'mekan' | 'zaman' | 'kahraman' | 'sovalye' | 'olay' | 'olgu';
 
-export const STORY_SEQUENCE: StoryStep[] = [
-  'time',
-  'place',
-  'creator',
-  'event1',
-  'event2',
-  'hero',
-  'ending',
-];
+export const SLOT_KEYS: SlotKey[] = ['mekan', 'zaman', 'kahraman', 'sovalye', 'olay', 'olgu'];
 
 export type Phase = 'lobby' | 'setup' | 'playing' | 'ended';
 
@@ -60,7 +45,7 @@ export type Player = {
 export type PlayedCard = {
   cardId: string;
   playedBy: string;
-  step: StoryStep;
+  slot: SlotKey;
   ts: number;
 };
 
@@ -81,9 +66,9 @@ export type GameState = {
   mainDeck: string[];
   runeDeck: string[];
   discardPile: string[];
+  board: Record<SlotKey, string[]>;
   storySequence: PlayedCard[];
   currentTurnPlayerId: string | null;
-  currentStep: StoryStep | null;
   log: LogEntry[];
   winnerId: string | null;
   createdAt: number;

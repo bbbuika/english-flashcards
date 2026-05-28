@@ -58,36 +58,16 @@ export const STRINGS = {
   passTurn: { tr: 'Sırayı Geç', en: 'Pass Turn' },
   endGame: { tr: 'Oyunu Bitir', en: 'End Game' },
   step: { tr: 'Adım', en: 'Step' },
-  steps: {
-    time: { tr: 'Zaman', en: 'Time' },
-    place: { tr: 'Mekan', en: 'Place' },
-    creator: { tr: 'Yaratıcı', en: 'Creator' },
-    event1: { tr: 'Olay 1', en: 'Event 1' },
-    event2: { tr: 'Olay 2', en: 'Event 2' },
-    hero: { tr: 'Kahraman', en: 'Hero' },
-    ending: { tr: 'Bitiş', en: 'Ending' },
+  slots: {
+    mekan: { tr: 'Mekan', en: 'Location' },
+    zaman: { tr: 'Zaman', en: 'Time' },
+    kahraman: { tr: 'Kahraman', en: 'Hero' },
+    sovalye: { tr: 'Şövalye', en: 'Knight' },
+    olay: { tr: 'Olay', en: 'Event' },
+    olgu: { tr: 'Olgu', en: 'Fact' },
   } as Record<string, { tr: string; en: string }>,
-  stepHints: {
-    time: { tr: 'Bir ay (zaman) kartı koy.', en: 'Place a month (time) card.' },
-    place: {
-      tr: 'Bir iye veya element (mekan) kartı koy.',
-      en: 'Place an iye or element (place) card.',
-    },
-    creator: {
-      tr: 'Bir tanrı/ça (yaratıcı) kartı koy.',
-      en: 'Place a god/goddess (creator) card.',
-    },
-    event1: { tr: 'Hikayeni başlatan bir olay anlat.', en: 'Narrate an event that kicks off the story.' },
-    event2: {
-      tr: 'İkinci bir olay ekle (opsiyonel).',
-      en: 'Add a second event (optional).',
-    },
-    hero: {
-      tr: 'Bir kahraman (çakra) kartı ile karakter gelişimini anlat.',
-      en: 'Play a hero (chakra) card to describe character growth.',
-    },
-    ending: { tr: 'Bitiş rünü ile oyunu sonlandır.', en: 'End the game with the ending rune.' },
-  } as Record<string, { tr: string; en: string }>,
+  pickSlot: { tr: 'Yuvayı seç', en: 'Pick a slot' },
+  pickCard: { tr: 'Bir kart seç', en: 'Pick a card' },
   interrupt: { tr: 'Hikayeyi Böl', en: 'Interrupt' },
   interruptTitle: {
     tr: 'Olay Öyle Olmadı!',
@@ -132,5 +112,5 @@ export function t(lang: Lang, key: SimpleKeys): string {
   return entry[lang];
 }
 
-export type StepKey = keyof typeof STRINGS.steps;
+export type SlotI18nKey = keyof typeof STRINGS.slots;
 
