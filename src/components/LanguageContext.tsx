@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { Lang } from '@/lib/i18n';
 import { STRINGS } from '@/lib/i18n';
 
@@ -19,13 +19,20 @@ type Ctx = {
 const LanguageCtx = createContext<Ctx | null>(null);
 
 function getInitialLang(): Lang {
-  if (typeof window === 'undefined') return 'tr';
-  const stored = localStorage.getItem('lang');
-  return stored === 'en' || stored === 'tr' ? stored : 'tr';
+  return 'tr';
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>(getInitialLang);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = localStorage.getItem('lang');
+    if (stored === 'tr' || stored === 'en') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLangState(stored);
+    }
+  }, []);
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);

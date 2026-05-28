@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useLang } from './LanguageContext';
@@ -11,12 +11,18 @@ export function HomePage() {
   const { t } = useLang();
   const router = useRouter();
   const [mode, setMode] = useState<'idle' | 'create' | 'join'>('idle');
-  const [name, setName] = useState<string>(() =>
-    typeof window === 'undefined' ? '' : getStoredName(),
-  );
+  const [name, setName] = useState<string>('');
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const stored = getStoredName();
+    if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setName(stored);
+    }
+  }, []);
 
   async function onCreate() {
     setError(null);

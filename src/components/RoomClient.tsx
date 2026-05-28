@@ -14,19 +14,24 @@ type JoinStatus = 'idle' | 'joining' | 'joined' | 'not_found' | 'error' | 'game_
 
 export function RoomClient({ code }: { code: string }) {
   const { t, lang } = useLang();
-  const [playerId] = useState<string>(() =>
-    typeof window === 'undefined' ? '' : getOrCreatePlayerId(),
-  );
-  const [name, setName] = useState<string>(() =>
-    typeof window === 'undefined' ? '' : getStoredName(),
-  );
-  const [nameInput, setNameInput] = useState<string>(() =>
-    typeof window === 'undefined' ? '' : getStoredName(),
-  );
+  const [playerId, setPlayerId] = useState<string>('');
+  const [name, setName] = useState<string>('');
+  const [nameInput, setNameInput] = useState<string>('');
   const [state, setState] = useState<PublicGameState | null>(null);
   const [joinStatus, setJoinStatus] = useState<JoinStatus>('idle');
   const [streamError, setStreamError] = useState<string | null>(null);
   const esRef = useRef<EventSource | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const pid = getOrCreatePlayerId();
+    const storedName = getStoredName();
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setPlayerId(pid);
+    setName(storedName);
+    setNameInput(storedName);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
 
   const join = useCallback(
     async (joinName: string, pid: string) => {
