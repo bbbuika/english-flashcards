@@ -1,37 +1,45 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Cormorant_Garamond, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
-import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import { LanguageProvider } from '@/components/LanguageContext';
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
+const serif = Cormorant_Garamond({
+  variable: '--font-serif',
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '600', '700'],
+});
+
+const mono = JetBrains_Mono({
+  variable: '--font-mono',
+  subsets: ['latin'],
+});
 
 export const viewport: Viewport = {
-  themeColor: '#4f46e5',
+  themeColor: '#0e0a07',
   width: 'device-width',
   initialScale: 1,
   minimumScale: 1,
 };
 
 export const metadata: Metadata = {
-  title: 'English Flashcards',
-  description: 'Learn English vocabulary with interactive flashcards — flip cards, track progress, study anytime.',
-  applicationName: 'English Flashcards',
+  title: 'Gölgeli Sona Bir Adım',
+  description:
+    'Kadim Türkler temalı çok oyunculu hikaye kartı oyunu. A multiplayer storytelling card game with Ancient Turkish mythology.',
+  applicationName: 'Gölgeli Sona Bir Adım',
   appleWebApp: {
     capable: true,
-    title: 'Flashcards',
-    statusBarStyle: 'default',
+    title: 'Akit',
+    statusBarStyle: 'black-translucent',
   },
   formatDetection: { telephone: false },
-  keywords: ['english', 'flashcards', 'vocabulary', 'learning', 'turkish'],
+  keywords: ['storytelling', 'card game', 'turkish mythology', 'hikaye', 'tarot'],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        {children}
-        <ServiceWorkerRegister />
+    <html lang="tr" className={`${serif.variable} ${mono.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-stone-950 text-amber-50">
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );
