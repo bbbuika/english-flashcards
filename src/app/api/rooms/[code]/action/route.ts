@@ -25,7 +25,7 @@ type Action =
   | { type: 'set_zorluk'; playerId: string; zorluk: Zorluk }
   | { type: 'set_scorekeeper'; playerId: string; targetId: string }
   | { type: 'start_game'; playerId: string }
-  | { type: 'draw_card'; playerId: string }
+  | { type: 'draw_card'; playerId: string; pile?: 'main' | 'rune' }
   | { type: 'play_card'; playerId: string; cardId: string }
   | { type: 'pass_turn'; playerId: string }
   | { type: 'didnt_happen'; playerId: string; targetId: string }
@@ -61,7 +61,7 @@ export async function POST(
       result = startGame(code, action.playerId);
       break;
     case 'draw_card':
-      result = drawCard(code, action.playerId);
+      result = drawCard(code, action.playerId, action.pile ?? 'main');
       break;
     case 'play_card':
       result = playCard(code, action.playerId, action.cardId);

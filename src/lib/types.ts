@@ -78,7 +78,8 @@ export type GameState = {
   hostId: string | null;
   scorekeeperId: string | null;
   themeRuneId: string | null;
-  deck: string[];
+  mainDeck: string[];
+  runeDeck: string[];
   discardPile: string[];
   storySequence: PlayedCard[];
   currentTurnPlayerId: string | null;
@@ -88,8 +89,9 @@ export type GameState = {
   createdAt: number;
 };
 
-export type PublicGameState = Omit<GameState, 'players' | 'deck'> & {
-  deckCount: number;
+export type PublicGameState = Omit<GameState, 'players' | 'mainDeck' | 'runeDeck'> & {
+  mainDeckCount: number;
+  runeDeckCount: number;
   players: Array<Omit<Player, 'hand'> & { hand: string[] | null }>;
   you: { id: string; hand: string[] } | null;
 };

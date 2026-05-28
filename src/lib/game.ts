@@ -57,7 +57,8 @@ export function createNewRoom(hostName: string, hostId: string): GameState {
     hostId,
     scorekeeperId: null,
     themeRuneId: null,
-    deck: [],
+    mainDeck: [],
+    runeDeck: [],
     discardPile: [],
     storySequence: [],
     currentTurnPlayerId: hostId,
@@ -152,28 +153,28 @@ export function startGame(code: string, playerId: string): GameState | { error: 
     const runeCards = CARDS.filter((c) => c.category === 'rune').map((c) => c.id);
     const nonRunes = CARDS.filter((c) => c.category !== 'rune').map((c) => c.id);
 
-    // Draw theme rune
+    // Draw theme rune from the rune pile
     const shuffledRunes = shuffle(runeCards);
     const themeRune = shuffledRunes.shift() ?? null;
     s.themeRuneId = themeRune;
+    s.runeDeck = shuffledRunes;
 
-    // Remaining deck = remaining runes + all non-runes, shuffled
-    const remaining = [...shuffledRunes, ...nonRunes];
-    const deck = shuffle(remaining);
+    // Main deck = all non-runes, shuffled
+    const mainDeck = shuffle(nonRunes);
 
-    // Deal hands
+    // Deal hands from the main deck
     const handSize = DEFAULT_HAND_SIZE;
     for (const p of s.players) {
       p.hand = [];
-      for (let i = 0; i < handSize && deck.length > 0; i++) {
-        p.hand.push(deck.shift()!);
+      for (let i = 0; i < handSize && mainDeck.length > 0; i++) {
+        p.hand.push(mainDeck.shift()!);
       }
       p.handCount = p.hand.length;
       p.tokens.didntHappen = DEFAULT_TOKENS_PER_PLAYER;
       p.tokens.didHappen = DEFAULT_TOKENS_PER_PLAYER;
       p.score = startingScore(s.niyet, s.zorluk, s.players.length);
     }
-    s.deck = deck;
+    s.mainDeck = mainDeck;
 
     // First turn: random
     const first = s.players[Math.floor(Math.random() * s.players.length)];
@@ -190,18 +191,26 @@ export function startGame(code: string, playerId: string): GameState | { error: 
   });
 }
 
-export function drawCard(code: string, playerId: string): GameState | undefined {
+export function drawCard(
+  code: string,
+  playerId: string,
+  pile: 'main' | 'rune' = 'main',
+): GameState | undefined {
   return updateRoom(code, (s) => {
     if (s.phase !== 'playing') return;
     const player = s.players.find((p) => p.id === playerId);
     if (!player) return;
-    if (s.deck.length === 0) return;
-    const card = s.deck.shift()!;
+    const deck = pile === 'rune' ? s.runeDeck : s.mainDeck;
+    if (deck.length === 0) return;
+    const card = deck.shift()!;
     player.hand.push(card);
     player.handCount = player.hand.length;
     s.log.push({
       ts: Date.now(),
-      message: { tr: `${player.name} kart çekti.`, en: `${player.name} drew a card.` },
+      message: {
+        tr: `${player.name} ${pile === 'rune' ? 'rün' : 'kart'} çekti.`,
+        en: `${player.name} drew a ${pile === 'rune' ? 'rune' : 'card'}.`,
+      },
     });
   });
 }
@@ -373,7 +382,8 @@ export function newGameInSameRoom(code: string, playerId: string): GameState | u
     if (s.hostId !== playerId) return;
     s.phase = 'lobby';
     s.themeRuneId = null;
-    s.deck = [];
+    s.mainDeck = [];
+    s.runeDeck = [];
     s.discardPile = [];
     s.storySequence = [];
     s.currentTurnPlayerId = s.hostId;

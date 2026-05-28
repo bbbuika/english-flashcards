@@ -16,6 +16,7 @@ export function CardImage({
   card,
   size = 'md',
   faceDown = false,
+  backKind = 'main',
   selected = false,
   onClick,
   disabled = false,
@@ -24,13 +25,15 @@ export function CardImage({
   card?: CardType | null;
   size?: Size;
   faceDown?: boolean;
+  backKind?: 'main' | 'rune';
   selected?: boolean;
   onClick?: () => void;
   disabled?: boolean;
   dimmed?: boolean;
 }) {
   const s = SIZES[size];
-  const src = faceDown || !card ? '/cards/back.jpg' : `/cards/${card.file}`;
+  const backSrc = backKind === 'rune' ? '/cards/back-rune.jpg' : '/cards/back.jpg';
+  const src = faceDown || !card ? backSrc : `/cards/${card.file}`;
   const alt = faceDown ? 'card back' : card?.title ?? 'card';
   const interactive = !!onClick && !disabled;
   return (
@@ -53,6 +56,12 @@ export function CardImage({
   );
 }
 
-export function CardBack({ size = 'md' }: { size?: Size }) {
-  return <CardImage size={size} faceDown />;
+export function CardBack({
+  size = 'md',
+  kind = 'main',
+}: {
+  size?: Size;
+  kind?: 'main' | 'rune';
+}) {
+  return <CardImage size={size} faceDown backKind={kind} />;
 }

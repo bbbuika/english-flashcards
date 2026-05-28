@@ -124,11 +124,20 @@ export function GameBoard({ state, myId, sendAction }: Props) {
                 {themeRune ? <CardImage card={themeRune} size="md" /> : <CardBack size="md" />}
               </div>
               <div className="flex flex-col items-center gap-1">
-                <div className="text-xs text-amber-200/60">{t('deck')}</div>
+                <div className="text-xs text-amber-200/60">{t('mainDeck')}</div>
                 <div className="relative">
-                  <CardBack size="md" />
+                  <CardBack size="md" kind="main" />
                   <div className="absolute inset-x-0 bottom-1 text-center text-[10px] text-amber-200 bg-stone-950/80 mx-1 py-0.5 rounded">
-                    {state.deckCount} {t('cardsRemaining')}
+                    {state.mainDeckCount}
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="text-xs text-amber-200/60">{t('runeDeck')}</div>
+                <div className="relative">
+                  <CardBack size="md" kind="rune" />
+                  <div className="absolute inset-x-0 bottom-1 text-center text-[10px] text-amber-200 bg-stone-950/80 mx-1 py-0.5 rounded">
+                    {state.runeDeckCount}
                   </div>
                 </div>
               </div>
@@ -169,10 +178,21 @@ export function GameBoard({ state, myId, sendAction }: Props) {
                   <>
                     <button
                       className="btn-ghost text-xs"
-                      onClick={() => sendAction({ type: 'draw_card', playerId: myId })}
-                      disabled={state.deckCount === 0}
+                      onClick={() =>
+                        sendAction({ type: 'draw_card', playerId: myId, pile: 'main' })
+                      }
+                      disabled={state.mainDeckCount === 0}
                     >
-                      {t('drawCard')}
+                      {t('drawMain')}
+                    </button>
+                    <button
+                      className="btn-ghost text-xs"
+                      onClick={() =>
+                        sendAction({ type: 'draw_card', playerId: myId, pile: 'rune' })
+                      }
+                      disabled={state.runeDeckCount === 0}
+                    >
+                      {t('drawRune')}
                     </button>
                     <button
                       className="btn-ghost text-xs"

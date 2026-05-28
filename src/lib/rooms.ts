@@ -81,12 +81,14 @@ export function generateRoomCode(): string {
 
 export function redactForPlayer(state: GameState, playerId: string | null): PublicGameState {
   const you = state.players.find((p) => p.id === playerId);
-  const { deck: _deck, players: _players, ...rest } = state;
-  void _deck;
+  const { mainDeck: _main, runeDeck: _rune, players: _players, ...rest } = state;
+  void _main;
+  void _rune;
   void _players;
   return {
     ...rest,
-    deckCount: state.deck.length,
+    mainDeckCount: state.mainDeck.length,
+    runeDeckCount: state.runeDeck.length,
     players: state.players.map((p) => ({
       ...p,
       hand: p.id === playerId ? p.hand : null,
