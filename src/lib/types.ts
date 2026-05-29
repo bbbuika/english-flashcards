@@ -31,6 +31,7 @@ export type Player = {
   name: string;
   isScorekeeper: boolean;
   isHost: boolean;
+  isBot: boolean;
   score: number;
   hand: string[];
   handCount: number;

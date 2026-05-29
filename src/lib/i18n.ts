@@ -5,6 +5,11 @@ export const STRINGS = {
   appSubtitle: { tr: 'Kadim Türkler hikaye kart oyunu', en: 'Ancient Turks storytelling card game' },
   createRoom: { tr: 'Oda Kur', en: 'Create Room' },
   joinRoom: { tr: 'Odaya Katıl', en: 'Join Room' },
+  demoMode: { tr: 'Botlarla Demo', en: 'Demo with Bots' },
+  demoDesc: {
+    tr: '3 botla anında bir oda kur ve oyna.',
+    en: 'Spin up a room with 3 bots and play right away.',
+  },
   roomCode: { tr: 'Oda Kodu', en: 'Room Code' },
   yourName: { tr: 'Adın', en: 'Your Name' },
   join: { tr: 'Katıl', en: 'Join' },

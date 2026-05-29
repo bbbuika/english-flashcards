@@ -35,6 +35,10 @@ export function getRoom(code: string): Room | undefined {
   return rooms.get(code.toUpperCase());
 }
 
+export function getAllRooms(): Map<string, Room> {
+  return rooms;
+}
+
 export function getRoomState(code: string): GameState | undefined {
   return rooms.get(code.toUpperCase())?.state;
 }

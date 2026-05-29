@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useLang } from './LanguageContext';
 import { LanguageToggle } from './LanguageToggle';
@@ -20,7 +20,6 @@ export function RoomClient({ code }: { code: string }) {
   const [state, setState] = useState<PublicGameState | null>(null);
   const [joinStatus, setJoinStatus] = useState<JoinStatus>('idle');
   const [streamError, setStreamError] = useState<string | null>(null);
-  const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -68,22 +67,31 @@ export function RoomClient({ code }: { code: string }) {
 
   useEffect(() => {
     if (joinStatus !== 'joined' || !playerId) return;
-    const es = new EventSource(`/api/rooms/${code}/state?playerId=${encodeURIComponent(playerId)}`);
-    esRef.current = es;
-    es.onmessage = (e) => {
+    let cancelled = false;
+    const fetchState = async () => {
       try {
-        const data = JSON.parse(e.data) as PublicGameState;
-        setState(data);
-        setStreamError(null);
+        const res = await fetch(
+          `/api/rooms/${code}/state?playerId=${encodeURIComponent(playerId)}`,
+          { cache: 'no-store' },
+        );
+        if (!res.ok) {
+          if (!cancelled) setStreamError('error');
+          return;
+        }
+        const data = (await res.json()) as PublicGameState;
+        if (!cancelled) {
+          setState(data);
+          setStreamError(null);
+        }
       } catch {
-        // ignore
+        if (!cancelled) setStreamError('reconnecting');
       }
     };
-    es.onerror = () => {
-      setStreamError('reconnecting');
-    };
+    void fetchState();
+    const id = setInterval(fetchState, 1500);
     return () => {
-      es.close();
+      cancelled = true;
+      clearInterval(id);
     };
   }, [code, playerId, joinStatus]);
 

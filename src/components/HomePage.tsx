@@ -10,7 +10,7 @@ import { getOrCreatePlayerId, getStoredName, setStoredName } from '@/lib/playerI
 export function HomePage() {
   const { t } = useLang();
   const router = useRouter();
-  const [mode, setMode] = useState<'idle' | 'create' | 'join'>('idle');
+  const [mode, setMode] = useState<'idle' | 'create' | 'join' | 'demo'>('idle');
   const [name, setName] = useState<string>('');
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +35,34 @@ export function HomePage() {
     const playerId = getOrCreatePlayerId();
     try {
       const res = await fetch('/api/rooms/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), playerId }),
+      });
+      const data = (await res.json()) as { code?: string; error?: string };
+      if (!res.ok || !data.code) {
+        setError(data.error ?? 'error');
+        setBusy(false);
+        return;
+      }
+      router.push(`/rooms/${data.code}`);
+    } catch {
+      setError('network');
+      setBusy(false);
+    }
+  }
+
+  async function onDemo() {
+    setError(null);
+    if (!name.trim()) {
+      setError(t('yourName'));
+      return;
+    }
+    setBusy(true);
+    setStoredName(name.trim());
+    const playerId = getOrCreatePlayerId();
+    try {
+      const res = await fetch('/api/rooms/demo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim(), playerId }),
@@ -99,6 +127,30 @@ export function HomePage() {
             </button>
             <button className="btn-ghost" onClick={() => setMode('join')}>
               {t('joinRoom')}
+            </button>
+            <button className="btn-ghost text-amber-200/80" onClick={() => setMode('demo')}>
+              {t('demoMode')} 🤖
+            </button>
+          </div>
+        )}
+
+        {mode === 'demo' && (
+          <div className="flex flex-col gap-3 animate-fade-in">
+            <p className="text-sm text-amber-200/70 italic text-center">{t('demoDesc')}</p>
+            <label className="text-sm text-amber-200/80">{t('yourName')}</label>
+            <input
+              className="input-warm"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              maxLength={24}
+              onKeyDown={(e) => e.key === 'Enter' && onDemo()}
+            />
+            <button className="btn-primary" onClick={onDemo} disabled={busy}>
+              {t('demoMode')}
+            </button>
+            <button className="btn-ghost" onClick={() => setMode('idle')} disabled={busy}>
+              {t('back')}
             </button>
           </div>
         )}

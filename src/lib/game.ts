@@ -1,6 +1,52 @@
 import { CARDS, getCard, isEndingRune } from './cards';
-import { createRoom, generateRoomCode, getRoom, updateRoom } from './rooms';
+import { createRoom, generateRoomCode, getAllRooms, getRoom, updateRoom } from './rooms';
 import type { GameState, Niyet, SlotKey, Zorluk } from './types';
+
+const BOT_NAMES = ['Yarlık', 'Mergen', 'Umay', 'Kızagan', 'Ayaz', 'Erlik'];
+
+export function createDemoRoom(hostName: string, hostId: string): GameState {
+  const state = createNewRoom(hostName, hostId);
+  for (let i = 0; i < 3; i++) {
+    const botId = `bot_${state.code}_${i + 1}`;
+    const botName = BOT_NAMES[(i + Math.floor(Math.random() * BOT_NAMES.length)) % BOT_NAMES.length];
+    joinRoom(state.code, botName + ' 🤖', botId);
+  }
+  updateRoom(state.code, (s) => {
+    for (const p of s.players) {
+      if (p.id.startsWith('bot_')) p.isBot = true;
+    }
+  });
+  return getRoom(state.code)?.state ?? state;
+}
+
+const SLOTS_FOR_BOT: SlotKey[] = ['mekan', 'zaman', 'kahraman', 'sovalye', 'olay', 'olgu'];
+
+export function tickBots(): void {
+  for (const [code, room] of getAllRooms()) {
+    const s = room.state;
+    if (s.phase !== 'playing') continue;
+    const current = s.players.find((p) => p.id === s.currentTurnPlayerId);
+    if (!current?.isBot) continue;
+    // Skip if it's the bot's first tick in this turn (give a small delay between human/bot)
+    const lastEntry = s.log[s.log.length - 1];
+    if (lastEntry && Date.now() - lastEntry.ts < 1500) continue;
+    // Bot decision: try to play a card; if hand empty, draw
+    if (current.hand.length === 0) {
+      drawCard(code, current.id, Math.random() < 0.2 ? 'rune' : 'main');
+      continue;
+    }
+    const cardId = current.hand[Math.floor(Math.random() * current.hand.length)];
+    const slot = SLOTS_FOR_BOT[Math.floor(Math.random() * SLOTS_FOR_BOT.length)];
+    playCard(code, current.id, cardId, slot);
+  }
+}
+
+declare global {
+  var __botTimer: NodeJS.Timeout | undefined;
+}
+if (!globalThis.__botTimer) {
+  globalThis.__botTimer = setInterval(tickBots, 2000);
+}
 
 function emptyBoard(): Record<SlotKey, string[]> {
   return {
@@ -56,6 +102,7 @@ export function createNewRoom(hostName: string, hostId: string): GameState {
         name: hostName.trim().slice(0, 24) || 'Host',
         isScorekeeper: false,
         isHost: true,
+        isBot: false,
         score: 0,
         hand: [],
         handCount: 0,
@@ -112,6 +159,7 @@ export function joinRoom(code: string, name: string, playerId: string): GameStat
         name: name.trim().slice(0, 24) || 'Player',
         isScorekeeper: false,
         isHost: false,
+        isBot: false,
         score: 0,
         hand: [],
         handCount: 0,
