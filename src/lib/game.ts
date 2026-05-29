@@ -1,6 +1,6 @@
 import { CARDS, getCard, isEndingRune } from './cards';
 import { createRoom, generateRoomCode, getAllRooms, getRoom, updateRoom } from './rooms';
-import type { GameState, Niyet, SlotKey, Zorluk } from './types';
+import type { ChatMessage, GameState, Niyet, SlotKey, Zorluk } from './types';
 
 const BOT_NAMES = ['Yarlık', 'Mergen', 'Umay', 'Kızagan', 'Ayaz', 'Erlik'];
 
@@ -131,9 +131,34 @@ export function createNewRoom(hostName: string, hostId: string): GameState {
     ],
     winnerId: null,
     createdAt: now,
+    messages: [],
   };
   createRoom(state);
   return state;
+}
+
+export function sendChat(
+  code: string,
+  playerId: string,
+  text: string,
+): { error: string } | GameState | undefined {
+  const room = getRoom(code);
+  if (!room) return { error: 'not_found' };
+  const player = room.state.players.find((p) => p.id === playerId);
+  if (!player) return { error: 'not_in_room' };
+  const trimmed = text.trim().slice(0, 300);
+  if (!trimmed) return { error: 'empty_message' };
+  const msg: ChatMessage = {
+    id: `m${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`,
+    playerId,
+    playerName: player.name,
+    text: trimmed,
+    ts: Date.now(),
+  };
+  return updateRoom(code, (s) => {
+    s.messages.push(msg);
+    if (s.messages.length > 60) s.messages.splice(0, s.messages.length - 60);
+  });
 }
 
 export function joinRoom(code: string, name: string, playerId: string): GameState | { error: string } {

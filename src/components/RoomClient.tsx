@@ -1,12 +1,15 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLang } from './LanguageContext';
 import { LanguageToggle } from './LanguageToggle';
 import { Lobby } from './Lobby';
 import { GameBoard } from './GameBoard';
 import { EndScreen } from './EndScreen';
+import { Chat } from './Chat';
+import { useDiscord } from './DiscordProvider';
+import { useVoice } from '@/hooks/useVoice';
 import { getOrCreatePlayerId, getStoredName, setStoredName } from '@/lib/playerId';
 import type { PublicGameState } from '@/lib/types';
 
@@ -14,12 +17,20 @@ type JoinStatus = 'idle' | 'joining' | 'joined' | 'not_found' | 'error' | 'game_
 
 export function RoomClient({ code }: { code: string }) {
   const { t, lang } = useLang();
+  const discord = useDiscord();
   const [playerId, setPlayerId] = useState<string>('');
   const [name, setName] = useState<string>('');
   const [nameInput, setNameInput] = useState<string>('');
   const [state, setState] = useState<PublicGameState | null>(null);
   const [joinStatus, setJoinStatus] = useState<JoinStatus>('idle');
   const [streamError, setStreamError] = useState<string | null>(null);
+
+  const remoteIds = useMemo(
+    () => state?.players.filter((p) => p.id !== playerId && !p.isBot).map((p) => p.id) ?? [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state?.players.map((p) => p.id).join(','), playerId],
+  );
+  const voice = useVoice(code, playerId, remoteIds);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -31,6 +42,20 @@ export function RoomClient({ code }: { code: string }) {
     setNameInput(storedName);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
+
+  // When Discord is ready and provides a username, pre-fill name
+  useEffect(() => {
+    if (!discord.ready) return;
+    if (!discord.isInDiscord || !discord.user) return;
+    const discordName = discord.user.global_name ?? discord.user.username;
+    if (discordName && !getStoredName()) {
+      setStoredName(discordName);
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setName(discordName);
+      setNameInput(discordName);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [discord.ready, discord.isInDiscord, discord.user]);
 
   const join = useCallback(
     async (joinName: string, pid: string) => {
@@ -49,6 +74,8 @@ export function RoomClient({ code }: { code: string }) {
           else setJoinStatus('error');
           return;
         }
+        const body = (await res.json().catch(() => null)) as { state?: PublicGameState } | null;
+        if (body?.state) setState(body.state);
         setJoinStatus('joined');
       } catch {
         setJoinStatus('error');
@@ -104,7 +131,7 @@ export function RoomClient({ code }: { code: string }) {
           body: JSON.stringify(action),
         });
       } catch {
-        // SSE will catch up
+        // poll will catch up
       }
     },
     [code],
@@ -128,9 +155,7 @@ export function RoomClient({ code }: { code: string }) {
     return (
       <CenterMessage>
         <div className="space-y-3 max-w-sm w-full">
-          <h2 className="font-display text-xl text-amber-100 text-center">
-            {t('yourName')}
-          </h2>
+          <h2 className="font-display text-xl text-amber-100 text-center">{t('yourName')}</h2>
           <p className="text-sm text-amber-200/60 text-center">
             {lang === 'tr' ? 'Odaya katılmak için' : 'to join the room'}{' '}
             <span className="font-mono text-amber-100">{code}</span>
@@ -221,11 +246,24 @@ export function RoomClient({ code }: { code: string }) {
       <div className="fixed top-2 right-2 z-50">
         <LanguageToggle />
       </div>
+
       {streamError && (
         <div className="fixed top-2 left-2 z-50 text-xs text-amber-300 bg-amber-900/80 px-2 py-1 rounded">
           {lang === 'tr' ? 'Bağlanıyor...' : 'Reconnecting...'}
         </div>
       )}
+
+      {/* Voice controls — bottom-left */}
+      <VoiceBar voice={voice} lang={lang} />
+
+      {/* Chat — bottom-right */}
+      <Chat
+        messages={state.messages ?? []}
+        myId={playerId}
+        lang={lang}
+        onSend={(text) => sendAction({ type: 'send_chat', playerId, text })}
+      />
+
       {state.phase === 'lobby' && (
         <Lobby state={state} myId={playerId} sendAction={sendAction} />
       )}
@@ -236,6 +274,60 @@ export function RoomClient({ code }: { code: string }) {
         <EndScreen state={state} myId={playerId} sendAction={sendAction} />
       )}
     </>
+  );
+}
+
+type VoiceBarProps = {
+  voice: ReturnType<typeof useVoice>;
+  lang: 'tr' | 'en';
+};
+
+function VoiceBar({ voice, lang }: VoiceBarProps) {
+  if (!voice.active) {
+    return (
+      <div className="fixed bottom-4 left-4 z-40 flex flex-col items-start gap-1">
+        <button
+          onClick={() => void voice.startVoice()}
+          className="w-10 h-10 bg-stone-800/90 hover:bg-stone-700/90 border border-amber-800/40 rounded-full flex items-center justify-center shadow-lg backdrop-blur transition-colors"
+          title={lang === 'tr' ? 'Sesli sohbete katıl' : 'Join voice chat'}
+        >
+          <span className="text-lg leading-none">🎤</span>
+        </button>
+        {voice.micError && (
+          <p className="text-[10px] text-red-400 max-w-[100px]">
+            {lang === 'tr' ? 'Mikrofon izni reddedildi' : 'Mic permission denied'}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed bottom-4 left-4 z-40 flex items-center gap-1.5">
+      <button
+        onClick={voice.toggleMute}
+        className={`w-10 h-10 border rounded-full flex items-center justify-center shadow-lg backdrop-blur transition-colors ${
+          voice.muted
+            ? 'bg-red-900/80 border-red-700/50 hover:bg-red-800/80'
+            : 'bg-green-900/80 border-green-700/50 hover:bg-green-800/80'
+        }`}
+        title={voice.muted ? (lang === 'tr' ? 'Sesi aç' : 'Unmute') : (lang === 'tr' ? 'Sustur' : 'Mute')}
+      >
+        <span className="text-lg leading-none">{voice.muted ? '🔇' : '🎤'}</span>
+      </button>
+      <button
+        onClick={voice.stopVoice}
+        className="w-8 h-8 bg-stone-800/90 hover:bg-red-900/80 border border-amber-800/40 rounded-full flex items-center justify-center shadow-lg backdrop-blur transition-colors"
+        title={lang === 'tr' ? 'Sesten ayrıl' : 'Leave voice'}
+      >
+        <span className="text-xs leading-none text-amber-400">✕</span>
+      </button>
+      {voice.connectedIds.length > 0 && (
+        <span className="text-[10px] text-green-400/80">
+          {voice.connectedIds.length} {lang === 'tr' ? 'bağlı' : 'connected'}
+        </span>
+      )}
+    </div>
   );
 }
 

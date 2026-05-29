@@ -6,6 +6,7 @@ import {
   newGameInSameRoom,
   passTurn,
   playCard,
+  sendChat,
   setNiyet,
   setScorekeeper,
   setZorluk,
@@ -31,7 +32,8 @@ type Action =
   | { type: 'didnt_happen'; playerId: string; targetId: string }
   | { type: 'did_happen'; playerId: string; targetId: string }
   | { type: 'end_game'; playerId: string }
-  | { type: 'new_game'; playerId: string };
+  | { type: 'new_game'; playerId: string }
+  | { type: 'send_chat'; playerId: string; text: string };
 
 export async function POST(
   req: Request,
@@ -80,6 +82,9 @@ export async function POST(
       break;
     case 'new_game':
       result = newGameInSameRoom(code, action.playerId);
+      break;
+    case 'send_chat':
+      result = sendChat(code, action.playerId, action.text);
       break;
     default:
       return NextResponse.json({ error: 'unknown_action' }, { status: 400 });

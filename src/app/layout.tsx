@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
+import { DiscordProvider } from '@/components/DiscordProvider';
 import { LanguageProvider } from '@/components/LanguageContext';
 
 const serif = Cormorant_Garamond({
@@ -39,7 +40,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="tr" className={`${serif.variable} ${mono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-stone-950 text-amber-50">
-        <LanguageProvider>{children}</LanguageProvider>
+        <DiscordProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </DiscordProvider>
       </body>
     </html>
   );

@@ -55,6 +55,14 @@ export type LogEntry = {
   message: { tr: string; en: string };
 };
 
+export type ChatMessage = {
+  id: string;
+  playerId: string;
+  playerName: string;
+  text: string;
+  ts: number;
+};
+
 export type GameState = {
   code: string;
   phase: Phase;
@@ -73,6 +81,16 @@ export type GameState = {
   log: LogEntry[];
   winnerId: string | null;
   createdAt: number;
+  messages: ChatMessage[];
+};
+
+export type SignalMsg = {
+  id: string;
+  from: string;
+  to: string;
+  kind: 'offer' | 'answer' | 'candidate';
+  data: string;
+  ts: number;
 };
 
 export type PublicGameState = Omit<GameState, 'players' | 'mainDeck' | 'runeDeck'> & {
