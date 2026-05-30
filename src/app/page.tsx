@@ -1,5 +1,5 @@
-import FlashcardApp from '@/components/FlashcardApp';
+import { HomePage } from '@/components/HomePage';
 
 export default function Page() {
-  return <FlashcardApp />;
+  return <HomePage />;
 }

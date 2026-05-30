@@ -10,46 +10,50 @@ export default function Icon() {
         style={{
           width: '100%',
           height: '100%',
-          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+          background: 'radial-gradient(circle at 30% 30%, #2b1d10 0%, #0e0a07 70%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
         }}
       >
-        {/* Shadow card */}
         <div
           style={{
             position: 'absolute',
-            background: 'rgba(0,0,0,0.18)',
-            width: 295,
-            height: 195,
-            borderRadius: 24,
-            top: 170,
-            left: 80,
-            transform: 'rotate(-8deg)',
+            background: 'rgba(0,0,0,0.4)',
+            width: 280,
+            height: 380,
+            borderRadius: 28,
+            top: 80,
+            left: 130,
+            transform: 'rotate(-10deg)',
+            border: '2px solid #3a2e22',
           }}
         />
-        {/* Front card */}
         <div
           style={{
-            background: 'white',
-            width: 290,
-            height: 190,
-            borderRadius: 22,
+            background: 'linear-gradient(180deg, #f3e0c2 0%, #c9a878 100%)',
+            width: 280,
+            height: 380,
+            borderRadius: 28,
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 10,
-            marginTop: -10,
+            border: '3px solid #8b6f47',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
           }}
         >
-          <div style={{ fontSize: 88, fontWeight: 900, color: '#4f46e5', lineHeight: 1 }}>
-            Aa
+          <div
+            style={{
+              fontSize: 200,
+              fontWeight: 900,
+              color: '#1c130b',
+              fontFamily: 'serif',
+              lineHeight: 1,
+            }}
+          >
+            A
           </div>
-          <div style={{ width: 180, height: 8, background: '#e0e7ff', borderRadius: 4 }} />
-          <div style={{ width: 130, height: 6, background: '#e0e7ff', borderRadius: 3 }} />
         </div>
       </div>
     ),
