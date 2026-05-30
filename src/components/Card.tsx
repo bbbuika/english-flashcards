@@ -3,9 +3,10 @@
 import Image from 'next/image';
 import type { Card as CardType } from '@/lib/types';
 
-type Size = 'sm' | 'md' | 'lg' | 'xl';
+type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZES: Record<Size, { w: number; h: number; cls: string }> = {
+  xs: { w: 48, h: 72, cls: 'w-[48px] h-[72px]' },
   sm: { w: 60, h: 90, cls: 'w-[60px] h-[90px]' },
   md: { w: 100, h: 150, cls: 'w-[100px] h-[150px]' },
   lg: { w: 150, h: 225, cls: 'w-[150px] h-[225px]' },
