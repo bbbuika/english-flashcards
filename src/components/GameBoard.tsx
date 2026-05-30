@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useLang } from './LanguageContext';
 import { CardImage, CardBack } from './Card';
+import { TorePanel } from './TorePanel';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import type { PublicGameState, SlotKey } from '@/lib/types';
 import { SLOT_KEYS } from '@/lib/types';
@@ -118,6 +119,15 @@ export function GameBoard({ state, myId, sendAction }: Props) {
                 }
               />
             </div>
+
+            <details className="mt-3">
+              <summary className="text-xs text-amber-200/60 cursor-pointer hover:text-amber-200">
+                📖 Töre
+              </summary>
+              <div className="mt-2">
+                <TorePanel compact />
+              </div>
+            </details>
 
             <details className="mt-3">
               <summary className="text-xs text-amber-200/60 cursor-pointer hover:text-amber-200">

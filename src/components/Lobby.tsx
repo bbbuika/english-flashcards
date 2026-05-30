@@ -1,6 +1,7 @@
 'use client';
 
 import { useLang } from './LanguageContext';
+import { TorePanel } from './TorePanel';
 import type { PublicGameState, Niyet, Zorluk } from '@/lib/types';
 
 type Props = {
@@ -128,6 +129,8 @@ export function Lobby({ state, myId, sendAction }: Props) {
           ))}
         </div>
       </section>
+
+      <TorePanel />
 
       {isHost ? (
         <button className="btn-primary w-full text-lg" onClick={start} disabled={!canStart}>
