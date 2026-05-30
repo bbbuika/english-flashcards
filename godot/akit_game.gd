@@ -40,6 +40,14 @@ const SLOT_LABELS_EN := {
 	"sovalye": "Knight", "olay": "Event", "olgu": "Fact",
 }
 
+# Themed role names used at the display layer.
+#   Kethüda  — Oyun Anlatıcısı; whoever currently holds the turn.
+#   Aygucı   — Töre Puanlayıcısı; appointed at lobby time, scores narrations.
+const ROLE_KETHUDA_TR := "Kethüda"
+const ROLE_KETHUDA_EN := "Narrator"
+const ROLE_AYGUCI_TR := "Aygucı"
+const ROLE_AYGUCI_EN := "Scorekeeper"
+
 const DEFAULT_HAND_SIZE := 7
 const DEFAULT_TOKENS_PER_PLAYER := 3
 
@@ -453,6 +461,31 @@ func rune_back_path(root: String = "res://cards/") -> String:
 func slot_label(slot: String, lang: String = "tr") -> String:
 	if lang == "en": return SLOT_LABELS_EN.get(slot, slot)
 	return SLOT_LABELS_TR.get(slot, slot)
+
+## Returns the id of the current Kethüda (the player whose turn it is to narrate).
+func kethuda_id() -> String:
+	return current_turn_player_id
+
+## True if the given player currently holds the Kethüda role this turn.
+func is_kethuda(player_id: String) -> bool:
+	return player_id != "" and player_id == current_turn_player_id
+
+## True if the given player holds the Aygucı role (the appointed scorekeeper).
+func is_ayguci(player_id: String) -> bool:
+	return player_id != "" and player_id == scorekeeper_id
+
+## Display label for the Kethüda role.
+func kethuda_label(lang: String = "tr") -> String:
+	return ROLE_KETHUDA_EN if lang == "en" else ROLE_KETHUDA_TR
+
+## Display label for the Aygucı role.
+func ayguci_label(lang: String = "tr") -> String:
+	return ROLE_AYGUCI_EN if lang == "en" else ROLE_AYGUCI_TR
+
+## Promotes a player to the Aygucı (scorekeeper) role.
+## Alias of `set_scorekeeper(target_id)` with a themed name.
+func set_ayguci(target_id: String) -> void:
+	set_scorekeeper(target_id)
 
 # ============================================================================
 # Internals

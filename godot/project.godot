@@ -1,0 +1,21 @@
+; Godot 4 project file for "Gölgeli Sona Bir Adım" / Akit.
+;
+; Open this folder directly in Godot 4:
+;   Project Manager → Import → choose this `project.godot`.
+
+config_version=5
+
+[application]
+
+config/name="Gölgeli Sona Bir Adım"
+config/description="Kadim Türkler hikaye kart oyunu — Akit."
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://cards/back.jpg"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+
+[input]

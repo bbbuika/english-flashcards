@@ -55,9 +55,10 @@ export function GameBoard({ state, myId, sendAction }: Props) {
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {isMyTurn ? (
-              <span className="text-emerald-300 font-semibold animate-pulse text-xs">{t('yourTurn')}</span>
+              <span className="text-emerald-300 font-semibold animate-pulse text-xs" title={t('narratorFull')}>{t('yourTurn')}</span>
             ) : currentPlayer ? (
-              <span className="text-amber-200/60 text-xs truncate max-w-[100px] sm:max-w-none">
+              <span className="text-amber-200/60 text-xs truncate max-w-[100px] sm:max-w-none" title={t('narratorFull')}>
+                <span className="text-amber-200/50">{t('narrator')}: </span>
                 <span className="text-amber-100">{currentPlayer.name}</span>
               </span>
             ) : null}
@@ -329,6 +330,22 @@ function PlayersStrip({
                 className={`w-1.5 h-1.5 rounded-full shrink-0 ${p.connected ? 'bg-emerald-400' : 'bg-stone-600'}`}
               />
               <span className={`${compact ? 'text-[10px]' : 'text-xs'} font-medium truncate flex-1`}>{p.name}</span>
+              {isCurrent && (
+                <span
+                  className="text-[9px] uppercase bg-amber-700/40 text-amber-200 px-1 rounded"
+                  title="Kethüda"
+                >
+                  K
+                </span>
+              )}
+              {p.isScorekeeper && (
+                <span
+                  className="text-[9px] uppercase bg-emerald-700/40 text-emerald-200 px-1 rounded"
+                  title="Aygucı"
+                >
+                  A
+                </span>
+              )}
               {isMe && (
                 <span className="text-[9px] uppercase text-amber-300">
                   {state.niyet === 'strateji' ? '↓' : '↑'}

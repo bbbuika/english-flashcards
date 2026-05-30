@@ -64,13 +64,20 @@ export function Lobby({ state, myId, sendAction }: Props) {
                   </span>
                 )}
                 {p.isScorekeeper && (
-                  <span className="text-[10px] uppercase tracking-wide bg-emerald-700/40 text-emerald-200 px-1.5 py-0.5 rounded">
+                  <span
+                    className="text-[10px] uppercase tracking-wide bg-emerald-700/40 text-emerald-200 px-1.5 py-0.5 rounded"
+                    title={t('scorekeeperFull')}
+                  >
                     {t('scorekeeper')}
                   </span>
                 )}
               </div>
               {isHost && p.id !== myId && (
-                <button className="btn-ghost text-xs" onClick={() => setSk(p.id)}>
+                <button
+                  className="btn-ghost text-xs"
+                  onClick={() => setSk(p.id)}
+                  title={t('scorekeeperFull')}
+                >
                   {t('scorekeeper')}
                 </button>
               )}
